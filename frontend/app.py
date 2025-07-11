@@ -1,10 +1,15 @@
-
-
 import streamlit as st
 import pandas as pd
 import os
 import sys
 import importlib.util
+
+# 👇 Add Nutricheck-AI (parent) folder to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+# ✅ Import your RAG pipeline function
+from rag.query_engine import ask_question
+
 
 # 🚨 Load model_logic.py from app/ using full path
 module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../app/model_logic.py"))
@@ -13,8 +18,6 @@ model_logic = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(model_logic)
 
 flag_ingredients = model_logic.flag_ingredients
-
-
 
 st.title("NutriCheck-AI: Ingredient Safety Checker")
 
@@ -48,7 +51,7 @@ if uploaded_file is not None:
 
     st.session_state["flagged_df"] = result_df  # store for later use
 
-    # 📊 Visual summary (ADD THIS BLOCK BELOW)
+    # 📊 Visual summary
     st.subheader("📊 Ingredient Category Summary")
     category_counts = result_df['category'].value_counts()
     st.write(category_counts)
@@ -71,4 +74,16 @@ if uploaded_file is not None:
 
     elif chart_type == "Bar Chart":
         st.bar_chart(category_counts)
+
+# --- New Section for RAG Q&A ---
+st.subheader("🤖 Ask a Question about an Ingredient")
+
+user_query = st.text_input("Type your question here:")
+
+if user_query:
+    with st.spinner("Getting answer from NutriCheck-AI..."):
+        from rag.query_engine import ask_question  # adjust path if needed
+        answer = ask_question(user_query)
+    st.markdown("### Answer:")
+    st.write(answer)
 
